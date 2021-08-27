@@ -1,9 +1,10 @@
-import { spawnSync } from 'child_process';
 import fetch from 'node-fetch';
+import notifier from 'node-notifier';
+import open from 'open';
 
-const date = '2021-08-06';
-const time = '15:00';
-const endTime = '20:00';
+const date = '2021-08-27';
+const time = '17:00';
+const endTime = '19:00';
 
 function toRetardedDate(goodDate: string): string {
     const [year, month, day] = goodDate.split('-');
@@ -11,6 +12,7 @@ function toRetardedDate(goodDate: string): string {
 }
 
 const url = new URL('https://www.sevenrooms.com/api-yoa/availability/widget/range');
+const targetUrl = 'https://ascendprime.com/';
 url.searchParams.set('venue', 'ascendprime');
 url.searchParams.set('time_slot', time);
 url.searchParams.set('party_size', '2');
@@ -22,6 +24,9 @@ url.searchParams.set('halo_size_interval', '16');
 const minDate = new Date(`${date}T${time}`);
 const maxDate = new Date(`${date}T${endTime}`);
 
+notifier.on('click', () => {
+    open(targetUrl);
+});
 
 interface TimeSlot {
     time_iso: string;
@@ -61,10 +66,10 @@ async function run() {
     }).map(t => t.time);
 
     if (slots.length) {
-        spawnSync('osascript', [
-            '-e',
-            `display notification "${slots.join(', ')}" with title "Reservation available!" sound name "Sosumi"`
-        ]);
+        notifier.notify({
+            title: 'Reservation available!',
+            message: slots.join(', '),
+        });
         console.log(new Date().toISOString(), slots.join(', '));
     } else {
         console.log(new Date().toISOString(), 'Nothing :(')
